@@ -11,6 +11,7 @@ using Microsoft.VisualBasic.FileIO;
 using SearchOption = System.IO.SearchOption;
 
 namespace BabelManager {
+ public sealed class UpdateTransactionException:Exception {public readonly bool RecoveryComplete;public readonly string Backup;public UpdateTransactionException(string message,Exception inner,bool complete,string backup):base(message,inner){RecoveryComplete=complete;Backup=backup;}}
  public class Settings {
   public string GameRoot="",InstallRoot="",CurrentFolder="",VpkPath="";
  }
@@ -60,9 +61,11 @@ namespace BabelManager {
    string temporary=slot+".bt-new";bool saved=false;
    try{
     File.Copy(Path.Combine(fresh,"pak01_dir.vpk"),temporary,true);if(File.Exists(slot))File.Replace(temporary,slot,null);else File.Move(temporary,slot);foreach(string f in targets)if(!f.Equals(slot,StringComparison.OrdinalIgnoreCase))File.Delete(f);if(afterCopy!=null)afterCopy();s.CurrentFolder=fresh;s.VpkPath=slot;if(production)Save(s);saved=true;
-   }catch{
-    foreach(string f in targets)File.Copy(Path.Combine(backup,Path.GetFileName(f)),f,true);if(!targets.Contains(slot,StringComparer.OrdinalIgnoreCase)&&File.Exists(slot))File.Delete(slot);s.CurrentFolder=old;s.VpkPath=oldVpk;throw;
-   }finally{if(File.Exists(temporary))File.Delete(temporary);}
+   }catch(Exception failure){
+    var errors=new List<string>();foreach(string f in targets){try{File.Copy(Path.Combine(backup,Path.GetFileName(f)),f,true);}catch(Exception recovery){errors.Add(Path.GetFileName(f)+": "+recovery.Message);}}
+    try{if(!targets.Contains(slot,StringComparer.OrdinalIgnoreCase)&&File.Exists(slot))File.Delete(slot);}catch(Exception recovery){errors.Add(recovery.Message);}finally{s.CurrentFolder=old;s.VpkPath=oldVpk;}
+    throw new UpdateTransactionException(errors.Count==0?failure.Message:"部分文件未能恢复，请先处理文件占用。备份："+backup+Environment.NewLine+String.Join(Environment.NewLine,errors),failure,errors.Count==0,backup);
+   }finally{try{if(File.Exists(temporary))File.Delete(temporary);}catch{/* Retain occupied temporary files without masking transaction recovery status. */}}
    string warning="";if(saved&&!String.IsNullOrEmpty(old)&&Directory.Exists(old)){try{NoLinks(old);if(!Under(s.InstallRoot,old))throw new Exception("旧目录边界变化。");if(production)FileSystem.DeleteDirectory(old,UIOption.OnlyErrorDialogs,RecycleOption.SendToRecycleBin);else Directory.Delete(old,true);}catch(Exception ex){warning="更新已完成，但旧文件夹未能移入回收站："+ex.Message;}}
    return warning;
   }

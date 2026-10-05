@@ -1,0 +1,2 @@
+using System;using System.IO;using System.Threading;using System.Reflection;[assembly:AssemblyVersion("1.5.0.0")][assembly:AssemblyFileVersion("1.5.0.0")]
+class LauncherFixture {static void Main(string[] args){if(args.Length>0){for(int i=0;i<1200&&!File.Exists(args[0]);i++)Thread.Sleep(50);return;}File.WriteAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"restart-marker.txt"),"reopened fixture");}}

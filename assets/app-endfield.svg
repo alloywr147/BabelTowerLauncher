@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <title>巴别塔启动器</title>
+  <path fill="#191919" d="M80 24H488V432L432 488H24V80Z"/>
+  <path fill="#f2f2f0" fill-rule="evenodd" d="M104 148H208L244 184V218L218 244L244 270V312L208 348H104Z M136 180H198L212 194V212L198 228H136Z M136 268H198L212 282V302L198 316H136Z"/>
+  <path fill="#fffa00" d="M266 148H410V184H356V348H320V184H266Z"/>
+</svg>

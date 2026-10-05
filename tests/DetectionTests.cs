@@ -1,0 +1,19 @@
+﻿using System;using System.IO;using System.Linq;using System.Text;using BabelManager;
+class DetectionTests{
+ static void Ok(bool yes,string s){if(!yes)throw new Exception(s);Console.WriteLine("PASS "+s);}
+ static void Game(string p){Directory.CreateDirectory(Path.Combine(p,"game","bin","win64"));Directory.CreateDirectory(Path.Combine(p,"game","citadel"));File.WriteAllText(Path.Combine(p,"game","bin","win64","deadlock.exe"),"");}
+ static void Mod(string p,string v){Directory.CreateDirectory(Path.Combine(p,"core"));Directory.CreateDirectory(Path.Combine(p,"portable-node"));File.WriteAllText(Path.Combine(p,"core","bridge_server.js"),"");File.WriteAllText(Path.Combine(p,"portable-node","node.exe"),"");File.WriteAllText(Path.Combine(p,"pak01_dir.vpk"),"");File.WriteAllText(Path.Combine(p,"README.md"),"版本:"+v);}
+ static void Main(){string r=Path.Combine(Path.GetTempPath(),"BTDetect-"+Guid.NewGuid().ToString("N"));Directory.CreateDirectory(r);try{
+  string lib=Path.Combine(r,"非默认 Steam 游戏库");string vdf="\"libraryfolders\" { \"1\" { \"path\" \""+lib.Replace("\\","\\\\")+"\" \"apps\" { \"1422450\" \"100\" } } }";
+  Ok(Discovery.LibraryPaths(vdf).Single()==lib,"parse Steam library paths including spaces and Chinese");
+  string game=Path.Combine(lib,"steamapps","common","Deadlock");Game(game);Ok(Discovery.FindGames(new[]{lib,Path.Combine(r,"missing")}).Single()==game,"find validated game in any Steam library");
+  string bad=Path.Combine(r,"not-a-game");Directory.CreateDirectory(bad);Ok(!Discovery.FindGames(new[]{bad}).Any(),"ignore incomplete or unavailable game directory");
+  string customLib=Path.Combine(r,"custom");Directory.CreateDirectory(Path.Combine(customLib,"steamapps"));File.WriteAllText(Path.Combine(customLib,"steamapps","appmanifest_1422450.acf"),"\"installdir\" \"Deadlock Test\"");string customGame=Path.Combine(customLib,"steamapps","common","Deadlock Test");Game(customGame);Ok(Discovery.FindGames(new[]{customLib}).Single()==customGame,"read game install folder from Steam manifest");
+  string mods=Path.Combine(r,"巴别塔");string old=Path.Combine(mods,"babeltower-105-win64 (1)");string newer=Path.Combine(mods,"BabelTower-110");Mod(old,"1.0.5");Mod(newer,"1.1.0");Directory.CreateDirectory(Path.Combine(mods,"babeltower-999-broken"));string staged=Path.Combine(mods,".bt-stage-test","BabelTower-999");Mod(staged,"9.9.9");
+  var found=Discovery.FindPackages(new[]{mods});Ok(found.Count==2&&!found.Contains(staged),"find complete old and new packages, skip staging and incomplete packages");Ok(Discovery.PreferredPackage(found,"")==newer,"prefer latest complete package without saved selection");Ok(Discovery.PreferredPackage(found,old)==old,"preserve saved selected version even when another is newer");
+  string patchTen=Path.Combine(mods,"BabelTower-1010");Mod(patchTen,"1.0.10");found.Add(patchTen);Ok(Discovery.PreferredPackage(found,"")==newer,"compare semantic versions rather than concatenated version digits");
+  Ok(Discovery.SuggestInstallRoot(new Settings(),newer,game)==mods,"derive existing BabelTower parent without hardcoded drive");
+  string existing=Path.Combine(r,"customRoot");Ok(Discovery.SuggestInstallRoot(new Settings{InstallRoot=existing},newer,game)==existing,"preserve user installation root");
+  Console.WriteLine("ALL DETECTION TESTS PASSED");
+ }catch(Exception ex){Console.WriteLine("FAIL "+ex.Message);Environment.ExitCode=1;}finally{if(Directory.Exists(r)){string cleanup=Path.GetFullPath(r);string temporary=Path.GetFullPath(Path.GetTempPath()).TrimEnd(Path.DirectorySeparatorChar)+Path.DirectorySeparatorChar;if(!cleanup.StartsWith(temporary,StringComparison.OrdinalIgnoreCase)||!Path.GetFileName(cleanup).StartsWith("BTDetect-",StringComparison.Ordinal))throw new Exception("unsafe fixture cleanup");Directory.Delete(cleanup,true);}}}
+}

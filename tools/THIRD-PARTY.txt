@@ -1,0 +1,9 @@
+7-Zip 26.03 — Copyright (C) 1999-2026 Igor Pavlov.
+7z.exe and 7z.dll are unmodified files from the official Windows x64 distribution.
+Main license: GNU LGPL 2.1 or later, with the unRAR restriction and BSD terms detailed in License.txt.
+Website: https://www.7-zip.org/
+Official binary: https://github.com/ip7z/7zip/releases/download/26.03/7z2603-x64.exe
+Corresponding complete source: https://github.com/ip7z/7zip/releases/download/26.03/7z2603-src.7z
+The corresponding source archive is included as 7z2603-src.7z.
+You may replace these external tools with a compatible 7-Zip build.
+The manager does not restrict reverse engineering of these components for debugging modifications.

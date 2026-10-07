@@ -80,7 +80,7 @@ namespace BabelManager {
   }
   static Stream OpenHttps(Uri uri,CancellationToken token){
    token.ThrowIfCancellationRequested();ServicePointManager.SecurityProtocol|=SecurityProtocolType.Tls12;
-   var request=(HttpWebRequest)WebRequest.Create(uri);request.UserAgent="BabelTowerLauncher/1.4";request.Accept="application/vnd.github+json";request.Timeout=20000;request.ReadWriteTimeout=20000;request.AutomaticDecompression=DecompressionMethods.GZip|DecompressionMethods.Deflate;
+   var request=(HttpWebRequest)WebRequest.Create(uri);request.UserAgent="BabelTowerLauncher/"+SelfUpdater.VersionLabel(SelfUpdater.CurrentVersion);request.Accept="application/vnd.github+json";request.Timeout=20000;request.ReadWriteTimeout=20000;request.AutomaticDecompression=DecompressionMethods.GZip|DecompressionMethods.Deflate;
    CancellationTokenRegistration registration=token.Register(()=>request.Abort());
    try{var response=(HttpWebResponse)request.GetResponse();if(response.ResponseUri.Scheme!="https"){response.Dispose();throw new Exception("下载发生了不安全的 HTTP 跳转。");}return new ResponseStream(response,registration);}catch(WebException e){registration.Dispose();token.ThrowIfCancellationRequested();var response=e.Response as HttpWebResponse;if(response!=null){int status=(int)response.StatusCode;response.Dispose();if(status==403||status==429)throw new Exception("GitHub 请求受限，请稍后重试或手动导入压缩包。");throw new Exception("GitHub 请求失败（HTTP "+status+"），可稍后重试或手动导入。");}throw new Exception("无法连接 GitHub，请检查网络后重试，或手动导入压缩包。",e);}catch{registration.Dispose();throw;}
   }

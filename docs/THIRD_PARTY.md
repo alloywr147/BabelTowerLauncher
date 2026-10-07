@@ -1,24 +1,10 @@
-# 第三方组件与视觉来源
+# 第三方组件
 
-## 7-Zip
+- RhineLabUI：https://github.com/LBEILC/RhineLabUI，MIT。保留主题、过渡代码和 MiSans 字体样式；源码位于 web/src/vendor/rhine。光碟场景和模型已移除，等高线背景由 ContourScene.js 实现。许可位于 web/src/vendor/rhine/LICENSE 及 web/public/licenses/RhineLabUI-MIT.txt。本项目不代表原作者或游戏官方。
+- Microsoft WebView2：SDK 1.0.4258.31。通过 scripts/restore-webview.ps1 从 NuGet 官方源还原；构建后许可及 Notice 位于 assets/lib。不捆绑 Evergreen Runtime。
+- React / React DOM / Three.js / Phosphor Icons：许可位于 web/public/licenses；依赖版本由 web/package-lock.json 固定。
+- MiSans：本地字体子集及许可位于 web/public/fonts。
+- 7-Zip 26.03 x64：独立进程调用。许可、说明和对应源码位于 tools/License.txt、tools/THIRD-PARTY.txt、tools/7z2603-src.7z。
+- Babel Tower：管理用户另行下载的 https://github.com/c1375rick/BabelTower 官方完整包，不捆绑 Mod、桥源码或游戏资源；许可由原项目负责。
 
-`tools/7z.exe` 与 `tools/7z.dll` 为随附的 7-Zip 26.03 Windows x64 文件。许可、源地址和对应完整源码见：
-
-- `tools/License.txt`
-- `tools/THIRD-PARTY.txt`
-- `tools/7z2603-src.7z`
-
-程序以独立进程调用 7-Zip。7-Zip 的许可不被本项目的 MIT 许可替换。
-
-## Babel Tower
-
-本项目管理用户另行下载的 [Babel Tower](https://github.com/c1375rick/BabelTower) 完整包，通过其已有接口检查桥和翻译服务。不包含其 Mod、桥源码或游戏资源。原项目的许可说明见原仓库。
-
-## 视觉设计
-
-界面参考以下社区设计规则，采用灰白 / 炭黑 / 信号黄、少量切角、留白和操作层级；保留原生 WinForms 控件行为：
-
-- [ark-ui Skill](https://github.com/Brandon030722/ark-ui-skill/blob/main/SKILL.md)
-- [ak-ui Skill](https://github.com/YunYouJun/ak-ui/blob/master/skills/ak-ui/SKILL.md)
-
-图标、等高线抽象图形和布局代码均为本项目原创绘制。未复制游戏标识、角色、官方网页资源或第三方组件代码；字体使用 Windows 系统字体。
+BT 等高线图标使用 AI 辅助生成。第三方组件的许可不被启动器 MIT 许可替换。

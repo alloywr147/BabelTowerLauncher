@@ -39,7 +39,7 @@ namespace BabelManager {
    string tag=Text(chosen,"tag_name"),name=PackageName(source,tag);
    var assets=Value(chosen,"assets") as object[];
    var matches=assets==null?new Dictionary<string,object>[0]:assets.OfType<Dictionary<string,object>>().Where(a=>Text(a,"name").Equals(name,StringComparison.OrdinalIgnoreCase)).ToArray();
-   if(matches.Length!=1)throw new Exception("最新正式版没有唯一的 Windows 完整包。请查看官方发布页，或手动导入完整压缩包。");
+   if(matches.Length!=1)throw new Exception("最新正式版没有唯一的 Windows 完整包。请查看官方发布页。");
    var asset=matches[0];var result=new OfficialRelease{Tag=tag,Version=version,Name=Text(asset,"name"),Notes=Text(chosen,"body"),PageUrl=Repo(source)+"/releases/tag/"+Uri.EscapeDataString(tag),DownloadUrl=Text(asset,"browser_download_url"),Size=Convert.ToInt64(Value(asset,"size")),Sha256=Text(asset,"digest"),Source=source};
    DateTime date;if(DateTime.TryParse(Text(chosen,"published_at"),null,System.Globalization.DateTimeStyles.RoundtripKind,out date))result.PublishedUtc=date.ToUniversalTime();
    Validate(result);return result;
@@ -49,7 +49,7 @@ namespace BabelManager {
    Version version=TagVersion(release.Tag);string expectedName=PackageName(release.Source,release.Tag);
    if(!String.Equals(release.Name,expectedName,StringComparison.OrdinalIgnoreCase)||release.Size<=0||release.Size>MaximumPackage)throw new Exception("官方安装包名称或体积异常。");
    Uri url;string path=new Uri(Repo(release.Source)).AbsolutePath+"/releases/download/"+Uri.EscapeDataString(release.Tag)+"/"+release.Name;if(!Uri.TryCreate(release.DownloadUrl,UriKind.Absolute,out url)||url.Scheme!="https"||!url.Host.Equals("github.com",StringComparison.OrdinalIgnoreCase)||url.Port!=443||url.UserInfo!=""||url.Query!=""||url.Fragment!=""||url.AbsolutePath!=path)throw new Exception("下载链接不属于指定仓库的发布附件。");
-   if(!Regex.IsMatch(release.Sha256??"",@"^sha256:[0-9a-fA-F]{64}$"))throw new Exception("官方附件没有可用的 SHA256 校验值，请手动下载并导入。");
+   if(!Regex.IsMatch(release.Sha256??"",@"^sha256:[0-9a-fA-F]{64}$"))throw new Exception("官方附件没有可用的 SHA256 校验值，请在 GitHub 确认发布附件后重试。");
   }
   public static OfficialRelease GetLatest(CancellationToken token){return Fetch(UpdateSource.Mod,token);}
   public static OfficialRelease GetLatestLauncher(CancellationToken token){return Fetch(UpdateSource.Launcher,token);}
@@ -82,7 +82,7 @@ namespace BabelManager {
    token.ThrowIfCancellationRequested();ServicePointManager.SecurityProtocol|=SecurityProtocolType.Tls12;
    var request=(HttpWebRequest)WebRequest.Create(uri);request.UserAgent="BabelTowerLauncher/"+SelfUpdater.VersionLabel(SelfUpdater.CurrentVersion);request.Accept="application/vnd.github+json";request.Timeout=20000;request.ReadWriteTimeout=20000;request.AutomaticDecompression=DecompressionMethods.GZip|DecompressionMethods.Deflate;
    CancellationTokenRegistration registration=token.Register(()=>request.Abort());
-   try{var response=(HttpWebResponse)request.GetResponse();if(response.ResponseUri.Scheme!="https"){response.Dispose();throw new Exception("下载发生了不安全的 HTTP 跳转。");}return new ResponseStream(response,registration);}catch(WebException e){registration.Dispose();token.ThrowIfCancellationRequested();var response=e.Response as HttpWebResponse;if(response!=null){int status=(int)response.StatusCode;response.Dispose();if(status==403||status==429)throw new Exception("GitHub 请求受限，请稍后重试或手动导入压缩包。");throw new Exception("GitHub 请求失败（HTTP "+status+"），可稍后重试或手动导入。");}throw new Exception("无法连接 GitHub，请检查网络后重试，或手动导入压缩包。",e);}catch{registration.Dispose();throw;}
+   try{var response=(HttpWebResponse)request.GetResponse();if(response.ResponseUri.Scheme!="https"){response.Dispose();throw new Exception("下载发生了不安全的 HTTP 跳转。");}return new ResponseStream(response,registration);}catch(WebException e){registration.Dispose();token.ThrowIfCancellationRequested();var response=e.Response as HttpWebResponse;if(response!=null){int status=(int)response.StatusCode;response.Dispose();if(status==403||status==429)throw new Exception("GitHub 请求受限，请稍后重试或查看 GitHub 发布页。");throw new Exception("GitHub 请求失败（HTTP "+status+"），可稍后重试或查看 GitHub 发布页。");}throw new Exception("无法连接 GitHub，请检查网络后重试，或查看 GitHub 发布页。",e);}catch{registration.Dispose();throw;}
   }
   sealed class ResponseStream:Stream {
    readonly HttpWebResponse response;readonly Stream stream;CancellationTokenRegistration registration;

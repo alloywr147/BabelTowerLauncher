@@ -1,14 +1,14 @@
-﻿param([string]$OutputDirectory='')
+param([string]$OutputDirectory='')
 $ErrorActionPreference='Stop'
 $taskRoot=Split-Path -Parent $PSScriptRoot
 $taskSrc=Join-Path $taskRoot 'src'
-if([string]::IsNullOrWhiteSpace($OutputDirectory)){$OutputDirectory=Join-Path $taskRoot 'dist\BabelTowerLauncher-1.5'}
+if([string]::IsNullOrWhiteSpace($OutputDirectory)){$OutputDirectory=Join-Path $taskRoot 'dist\BabelTowerLauncher-1.6'}
 $taskCompiler=Join-Path ([Environment]::GetFolderPath('Windows')) 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'
 if(-not (Test-Path -LiteralPath $taskCompiler)){throw 'Windows .NET Framework x64 C# compiler not found'}
 New-Item -ItemType Directory -Path $OutputDirectory -Force | Out-Null
 $taskRefs=@('/r:System.IO.Compression.dll','/r:System.IO.Compression.FileSystem.dll','/r:System.Web.Extensions.dll','/r:Microsoft.VisualBasic.dll','/r:System.Management.dll','/r:System.Windows.Forms.dll','/r:System.Drawing.dll')
 $taskRefs+=@(('/r:'+(Join-Path $taskRoot 'lib\WebView2\package\lib\net462\Microsoft.Web.WebView2.Core.dll')),('/r:'+(Join-Path $taskRoot 'lib\WebView2\package\lib\net462\Microsoft.Web.WebView2.WinForms.dll')))
-$taskFiles=@('RhineRuntime.cs','RhineShell.cs','RepairService.cs','ReportExport.cs','Core.cs','DownloadCache.cs','OfficialUpdates.cs','PackageInstaller.cs','SelfUpdater.cs','SelfUpdateFiles.cs','Discovery.cs','ArchiveDrop.cs','Bridge.cs','Diagnostics.cs','Theme.cs','ThemePreferences.cs','UI.cs','SoftwareUpdateUI.cs','StartupUpdates.cs','StartupUpdateDialog.cs','StartupUpdateUI.cs','AssemblyInfo.cs') | ForEach-Object {Join-Path $taskSrc $_}
+$taskFiles=@('RhineRuntime.cs','RhineShell.cs','RepairService.cs','ReportExport.cs','Core.cs','DownloadCache.cs','OfficialUpdates.cs','PackageInstaller.cs','SelfUpdater.cs','SelfUpdateFiles.cs','Discovery.cs','Bridge.cs','Diagnostics.cs','Theme.cs','ThemePreferences.cs','InterfacePreferences.cs','UI.cs','SoftwareUpdateUI.cs','StartupUpdates.cs','StartupUpdateDialog.cs','StartupUpdateUI.cs','AssemblyInfo.cs') | ForEach-Object {Join-Path $taskSrc $_}
 & $taskCompiler /nologo /target:winexe /platform:x64 ('/win32icon:'+(Join-Path $taskRoot 'assets\app.ico')) ('/win32manifest:'+(Join-Path $taskSrc 'app.manifest')) ('/out:'+(Join-Path $OutputDirectory '巴别塔启动器.exe')) @taskRefs @taskFiles
 if($LASTEXITCODE -ne 0){throw 'Application compilation failed'}
 Copy-Item -LiteralPath (Join-Path $taskSrc 'app.config') -Destination (Join-Path $OutputDirectory '巴别塔启动器.exe.config') -Force

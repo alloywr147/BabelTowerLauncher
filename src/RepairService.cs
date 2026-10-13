@@ -52,7 +52,7 @@ namespace BabelManager {
             Core.ValidateSettings(settings);
             Core.NoLinks(settings.CurrentFolder);
             if (!Core.IsPackage(settings.CurrentFolder) || !Core.Under(settings.InstallRoot, settings.CurrentFolder))
-                throw new Exception("当前完整包缺失或不完整，请在 Mod 更新页下载官方完整包，或重新导入压缩包。");
+                throw new Exception("当前完整包缺失或不完整，请在 Mod 更新页下载官方完整包。");
             string key;
             using (var sha = SHA256.Create())
                 key = BitConverter.ToString(sha.ComputeHash(Encoding.UTF8.GetBytes(Core.Full(settings.GameRoot).ToUpperInvariant()))).Replace("-", "");
@@ -77,7 +77,7 @@ namespace BabelManager {
             }
 
             string source = Path.Combine(settings.CurrentFolder, "pak01_dir.vpk");
-            if (!Core.IsBabelVpk(source)) throw new Exception("当前包的 VPK 不包含巴别塔资源，请重新导入官方完整包。");
+            if (!Core.IsBabelVpk(source)) throw new Exception("当前包的 VPK 不包含巴别塔资源，请从 Mod 更新页重新下载官方完整包。");
             string gi = Path.Combine(settings.GameRoot, "game", "citadel", "gameinfo.gi");
             Core.NoLinks(gi);
             if (!File.Exists(gi) || new FileInfo(gi).Length > 2 * 1024 * 1024)
@@ -90,7 +90,7 @@ namespace BabelManager {
             string template = originalConfig != null ? cfg : Path.Combine(settings.CurrentFolder, "config", "config.example.json");
             Core.NoLinks(template);
             if (!File.Exists(template) || new FileInfo(template).Length > 1024 * 1024)
-                throw new Exception("桥配置缺失或异常，请重新导入完整包。");
+                throw new Exception("桥配置缺失或异常，请从 Mod 更新页重新下载官方完整包。");
             var values = Core.Json().Deserialize<Dictionary<string, object>>(Text(originalConfig ?? File.ReadAllBytes(template)));
             if (values == null) throw new Exception("桥配置不是 JSON 对象，保留原内容，请先检查配置。");
             values["gameLogPath"] = Path.Combine(settings.GameRoot, "game", "citadel", "console.log");
@@ -106,7 +106,7 @@ namespace BabelManager {
             var targets = Core.GameVpks(settings);
             string slot = Core.ChooseVpk(settings);
             byte[] sourceBytes = File.ReadAllBytes(source);
-            if (!Core.IsBabelVpk(sourceBytes)) throw new Exception("源 VPK 在准备期间发生变化，请重新导入完整包。");
+            if (!Core.IsBabelVpk(sourceBytes)) throw new Exception("源 VPK 在准备期间发生变化，请从 Mod 更新页重新下载官方完整包。");
             var changes = new List<Change> { new Change { Path = slot, Original = SnapshotVpk(slot, targets.Contains(slot, StringComparer.OrdinalIgnoreCase)), Updated = sourceBytes } };
             foreach (string target in targets)
                 if (!target.Equals(slot, StringComparison.OrdinalIgnoreCase)) changes.Add(new Change { Path = target, Original = SnapshotVpk(target, true), Updated = null });
@@ -174,3 +174,4 @@ namespace BabelManager {
         }
     }
 }
+

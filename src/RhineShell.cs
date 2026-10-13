@@ -22,12 +22,16 @@ namespace BabelManager {
         int rhineDraftRevision;
         bool rhineReady;
         bool rhineConfirm;
+        bool rhineSimple = true;
 
         public void EnableRhine() {
             pendingDetection = null;
-            ClientSize = new Size(1280, 800);
-            MinimumSize = new Size(976, 719);
-            Text = "巴别塔启动器 1.5";
+            RhineRoute("home");
+            rhineSimple = InterfacePreferences.LoadSimple();
+            if (rhineSimple) Theme.SetDark(true);
+            MinimumSize = rhineSimple ? new Size(816, 599) : new Size(976, 719);
+            ClientSize = rhineSimple ? new Size(900, 620) : new Size(1280, 800);
+            Text = "巴别塔启动器";
             // Hide the native fallback before the form's first paint, not after navigation.
             rhineFallbackControls.AddRange(Controls.Cast<Control>());
             foreach (Control control in rhineFallbackControls) control.Visible = false;
@@ -40,7 +44,7 @@ namespace BabelManager {
             FormClosed += (sender, args) => { if (rhineTimer != null) rhineTimer.Dispose(); };
         }
         void RhineRoute(string page) { rhinePage = page; }
-        static Color RhineSurface() { return Theme.IsDark ? Color.FromArgb(17, 24, 27) : Color.FromArgb(234, 229, 225); }
+        Color RhineSurface() { return rhineSimple ? Color.Black : Theme.IsDark ? Color.FromArgb(17, 24, 27) : Color.FromArgb(234, 229, 225); }
         void RhineLog(string message) {
             rhineLogs.Add(DateTime.Now.ToString("HH:mm:ss") + "  " + message);
             if (rhineLogs.Count > 150) rhineLogs.RemoveAt(0);
@@ -64,6 +68,7 @@ namespace BabelManager {
                 web.NewWindowRequested += (sender, args) => { args.Handled = true; };
                 web.PermissionRequested += (sender, args) => { args.State = CoreWebView2PermissionState.Deny; };
                 web.WebMessageReceived += RhineMessage;
+                await web.AddScriptToExecuteOnDocumentCreatedAsync("window.__babelSimpleMode=" + (rhineSimple ? "true" : "false") + ";window.__babelDark=" + (Theme.IsDark ? "true" : "false") + ";");
                 web.NavigationCompleted += (sender, args) => {
                     if (!args.IsSuccess) { Log("界面载入失败：" + args.WebErrorStatus); return; }
                     foreach (Control control in Controls) if (control != rhineView) control.Visible = false;
@@ -73,7 +78,7 @@ namespace BabelManager {
                 rhineTimer.Tick += (sender, args) => PushRhineState();
                 rhineTimer.Start();
                 web.Navigate("https://babel.local/index.html");
-                if (!Core.IsGame(settings.GameRoot)) { RhineRoute("settings"); await DetectRhinePaths(); }
+                if (!Core.IsGame(settings.GameRoot)) await DetectRhinePaths();
             } catch (Exception error) {
                 if (rhineView != null) { Controls.Remove(rhineView); rhineView.Dispose(); rhineView = null; }
                 if (rhineLoading != null) { Controls.Remove(rhineLoading); rhineLoading.Dispose(); rhineLoading = null; }
@@ -97,7 +102,7 @@ namespace BabelManager {
             Version mod = OfficialUpdates.CurrentVersion(settings.CurrentFolder);
             bool running = Bridge.GameRunning();
             var payload = new {
-                type = "state", page = rhinePage, busy = busy || detecting, dark = Theme.IsDark,
+                type = "state", page = rhinePage, busy = busy || detecting, dark = Theme.IsDark, interfaceMode = rhineSimple ? "simple" : "full",
                 launcherVersion = SelfUpdater.VersionLabel(SelfUpdater.CurrentVersion),
                 modVersion = mod == null ? "尚未安装" : mod.ToString(),
                 gameRunning = running,
@@ -144,6 +149,19 @@ namespace BabelManager {
                 }
                 switch (command) {
                     case "state": rhineLastState = ""; break;
+                    case "interfaceMode":
+                        object simpleValue;
+                        if (!request.TryGetValue("simple", out simpleValue) || !(simpleValue is bool)) return;
+                        InterfacePreferences.SaveSimple((bool)simpleValue);
+                        rhineSimple = (bool)simpleValue;
+                        Theme.SetDark(rhineSimple || ThemePreferences.LoadDark());
+                        MinimumSize = rhineSimple ? new Size(816, 599) : new Size(976, 719);
+                        ClientSize = rhineSimple ? new Size(900, 620) : new Size(1280, 800);
+                        BackColor = RhineSurface();
+                        if (rhineView != null) rhineView.DefaultBackgroundColor = RhineSurface();
+                        Theme.ApplyChrome(this);
+                        ShowMain();
+                        break;
                     case "home": ShowMain(); break;
                     case "mod": ShowImportPage(); break;
                     case "diagnostics": ShowDiagnostics(); break;
@@ -165,27 +183,22 @@ namespace BabelManager {
                     case "pickRoot": ApplyRhineDraft(request); PickRhineFolder("root"); break;
                     case "pickPackage": ApplyRhineDraft(request); PickRhineFolder("package"); break;
                     case "saveSettings": SaveRhineSettings(request); break;
-                    case "import": ShowImportPage(); PickArchive(); break;
-                    case "dropArchive": ImportRhineDrop(args); break;
                     case "checkMod": ShowImportPage(); CheckOfficial(); break;
                     case "downloadMod": ShowImportPage(); DownloadOfficial(); break;
                     case "checkSoftware": ShowSoftwareUpdate(); CheckSoftware(); break;
                     case "downloadSoftware": ShowSoftwareUpdate(); DownloadSoftware(); break;
                     case "notes": ShowReleaseNotes(rhinePage == "software" ? launcherRelease : officialRelease); break;
+                    case "repository":
+                        string repository = rhinePage == "software" ? "https://github.com/alloywr147/BabelTowerLauncher" : "https://github.com/c1375rick/BabelTower";
+                        if (RhineTestMode) RhineLog("仓库链接：" + repository);
+                        else System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(repository) { UseShellExecute = true });
+                        break;
                     case "folder": OpenFolder(settings.InstallRoot); break;
                     case "bridgeLogs": if (Core.IsPackage(settings.CurrentFolder)) OpenFolder(Path.Combine(settings.CurrentFolder, "logs")); break;
                     default: return;
                 }
             } catch (Exception error) { rhineResult = error.Message; Log(error.Message); }
             finally { rhineLastState = ""; PushRhineState(); }
-        }
-        void ImportRhineDrop(CoreWebView2WebMessageReceivedEventArgs args) {
-            if (args.AdditionalObjects == null || args.AdditionalObjects.Count != 1) throw new Exception("一次只可拖入一个压缩包。");
-            var file = args.AdditionalObjects[0] as CoreWebView2File;
-            if (file == null) throw new Exception("请拖入完整的 ZIP、7Z 或 RAR 压缩包。");
-            string archive = file.Path;
-            if (!Path.IsPathRooted(archive)) throw new Exception("无法读取拖入文件，请点击选择压缩包。");
-            ShowImportPage(); UpdateArchive(archive);
         }
         void LaunchRhineGame() {
             if (!connectivity.TranslationFresh(DateTime.UtcNow)) throw new Exception("检查结果已失效，请重新检查后启动。");

@@ -1,0 +1,83 @@
+/* Foreground rhythm from RhineLabUI; scene rendering and typography stay intact. */
+.page-surface{position:relative;pointer-events:none}
+.page-surface>.launch-panel,.page-surface>.detail-page{animation:none}
+.page-surface[inert]{pointer-events:none}
+.page-surface[inert] *{pointer-events:none!important}
+.menu-navigation .nav-line,.launch-button::after{transition-duration:.58s;transition-timing-function:cubic-bezier(.22,1,.36,1)}
+.launch-button>svg{transition-duration:.58s}
+.launch-copy{transition:transform .45s cubic-bezier(.22,1,.36,1)}
+.launch-button:is(:hover,:focus-visible):not(:disabled) .launch-copy{transform:translateX(4px)}
+.rolling-number{display:inline-flex;align-items:baseline;line-height:1;font-variant-numeric:tabular-nums;font-kerning:none;letter-spacing:0}
+.digit-window{display:inline-block;width:.62em;height:1em;overflow:hidden;vertical-align:top}
+.digit-strip{display:flex;flex-direction:column;transition:transform .58s cubic-bezier(.22,1,.36,1);will-change:transform}
+.rolling-digit{display:block;flex:0 0 1em;height:1em;line-height:1;text-align:center}
+.page-counter b{letter-spacing:0}
+.page-counter>div{align-items:flex-end}
+.page-counter small{padding-bottom:3px}
+.metadata{position:relative;padding-top:3px}
+.metadata::before,.metadata::after{content:'';position:absolute;top:-6px;width:8px;height:8px;border-top:1px solid var(--theme-muted);opacity:.65;pointer-events:none}
+.metadata::before{left:-12px;border-left:1px solid var(--theme-muted)}
+.metadata::after{right:-12px;border-right:1px solid var(--theme-muted)}
+.metadata dt{display:flex;align-items:center;gap:7px}
+.channel-index{font-size:11px;letter-spacing:0;color:var(--theme-muted);opacity:.6;font-variant-numeric:tabular-nums}
+.metadata dd{min-height:20px}
+.status-value{display:inline-block}
+.metadata [data-status=good] .channel-index{color:var(--theme-accent);opacity:1}
+.launch-panel h1,.detail-page h1{position:relative}
+.launch-panel h1::before,.detail-page h1::before{content:'';position:absolute;left:-18px;top:4px;bottom:4px;width:2px;background:var(--theme-accent);opacity:.65}
+.callout-rule::after{content:'';position:absolute;left:0;top:0;width:48px;height:4px;background:repeating-linear-gradient(90deg,var(--theme-muted) 0 1px,transparent 1px 8px);opacity:.6;pointer-events:none}
+.page-counter::before{content:'';display:block;width:38px;height:4px;margin-bottom:12px;background:repeating-linear-gradient(90deg,var(--theme-muted) 0 1px,transparent 1px 9px);opacity:.6}
+.download-meter{position:relative;display:flex;align-items:center;gap:14px;grid-column:1/-1;min-height:20px}
+.download-meter progress{flex:1;min-width:0;transition:width .58s cubic-bezier(.22,1,.36,1)}
+.download-meter progress::-webkit-progress-value{transition:width .58s cubic-bezier(.22,1,.36,1)}
+.download-percent{display:flex;align-items:baseline;gap:2px;font-size:14px;min-width:48px;justify-content:flex-end;font-variant-numeric:tabular-nums}
+.download-percent small{font-size:11px;color:var(--theme-muted)}
+.page-mod .download-state{row-gap:3px;margin-top:8px}
+.page-mod .archive-drop{margin-top:14px}
+/* One feedback cadence for text actions. Icon-only pickers keep their simple focus ring. */
+:is(.utility-link,.theme-switch,.text-action,.back-link,.secondary-actions button,.dialog-confirm,.page-primary,.download-state>button){position:relative;transition:color .32s cubic-bezier(.22,1,.36,1),transform .32s cubic-bezier(.22,1,.36,1)}
+:is(.utility-link,.theme-switch,.text-action,.back-link,.secondary-actions button,.dialog-confirm,.page-primary,.download-state>button)::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--theme-accent);transform:scaleX(0);transform-origin:left;transition:transform .58s cubic-bezier(.22,1,.36,1);pointer-events:none}
+:is(.utility-link,.theme-switch,.text-action,.back-link,.secondary-actions button,.dialog-confirm,.page-primary,.download-state>button):is(:hover,:focus-visible):not(:disabled){color:var(--theme-accent)}
+:is(.utility-link,.theme-switch,.text-action,.back-link,.secondary-actions button,.dialog-confirm,.page-primary,.download-state>button):is(:hover,:focus-visible):not(:disabled)::after{transform:scaleX(1)}
+:is(.utility-link,.text-action,.back-link,.secondary-actions button,.dialog-confirm,.page-primary)>svg{transition:transform .58s cubic-bezier(.22,1,.36,1)}
+:is(.utility-link,.text-action,.back-link,.secondary-actions button,.dialog-confirm,.page-primary):is(:hover,:focus-visible):not(:disabled)>svg{transform:translate(6px,-4px)}
+:is(.launch-button,.dialog-confirm):is(:hover,:focus-visible):not(:disabled)>svg{transform:translateX(12px)}
+:is(.text-action,.back-link,.secondary-actions button,.dialog-confirm,.page-primary):active:not(:disabled){transform:translateY(2px)}
+.dialog-shade{animation:none;background:rgba(0,0,0,.28);backdrop-filter:blur(6px)}
+.dialog-shade[data-transition=closing]{pointer-events:none}
+.terminal-dialog{width:min(480px,calc(100vw - 48px));padding:0 32px 28px;border:1px solid var(--theme-line);background:rgba(var(--theme-panel-rgb),.97);box-shadow:0 26px 95px rgba(0,0,0,.18);max-height:calc(100dvh - 64px);overflow:auto;scrollbar-width:thin;scrollbar-color:var(--theme-line) transparent}
+.terminal-dialog::before,.terminal-dialog::after{content:'';position:absolute;width:10px;height:10px;border-color:var(--theme-accent);border-style:solid;pointer-events:none}
+.terminal-dialog::before{left:0;top:0;border-width:2px 0 0 2px}
+.terminal-dialog::after{right:0;bottom:0;border-width:0 2px 2px 0}
+.terminal-top{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:15px;padding:19px 0 15px;background:rgb(var(--theme-panel-rgb));border-bottom:1px solid var(--theme-line);font-size:11px;letter-spacing:1px;color:var(--theme-muted)}
+.terminal-top .dialog-close{position:static;display:flex;align-items:center;gap:12px;min-height:28px;min-width:56px;justify-content:flex-end}
+.terminal-top .dialog-close span{font-size:11px;letter-spacing:.5px;opacity:.7}
+.terminal-top .dialog-close:hover{color:var(--theme-accent)}
+.terminal-dialog h2{font-size:26px;margin:25px 0 20px}
+.terminal-dialog p{line-height:1.8}
+.terminal-dialog .demo-note{padding:12px 0;border-top:1px solid var(--theme-line);margin-bottom:0}
+.terminal-dialog .dialog-confirm{margin-top:18px;font-size:16px;min-height:47px}
+.terminal-dialog.report-dialog{width:min(740px,calc(100vw - 64px))}
+.report-preview{padding:3px 0 8px;border-bottom:1px solid var(--theme-line);max-height:44vh;font-size:14px;line-height:1.85}
+.check-confirmation li{padding-bottom:10px;border-bottom:1px solid var(--theme-line)}
+.launcher[data-ui-motion=reduced] *, .launcher[data-ui-motion=reduced] *::before,.launcher[data-ui-motion=reduced] *::after{transition:none!important;animation:none!important}
+@media(max-height:720px){.terminal-top{padding-top:14px;padding-bottom:10px}.terminal-dialog h2{margin-top:19px;margin-bottom:15px}.terminal-dialog{padding-bottom:22px}}
+@media(max-width:580px){.terminal-dialog{padding-left:22px;padding-right:22px}.channel-index{display:none}}
+
+/* Desktop pages fit the fixed WebView; panels retain their own scroll areas. */
+html,body,#root{height:100%;overflow:hidden}
+.launcher{height:100dvh;min-height:0}
+.detail-page.page-settings{padding-top:clamp(110px,14vh,135px);padding-bottom:80px}
+.page-settings h1{font-size:30px;margin-top:12px}
+.page-settings .callout-rule{margin-top:12px}
+.page-settings .page-actions{margin:10px 0}
+.page-settings .settings-top{margin:12px 0}
+.page-settings .path-field{margin:10px 0}
+.page-settings .path-field>div{margin-top:4px}
+.page-settings .path-field input{padding:8px 0}
+.page-settings .path-field>small{margin-top:3px}
+.page-settings .page-primary{margin-top:12px;padding:12px 0}
+.channel-strip .certificate-setup{margin-left:auto;padding:3px 0 3px 12px;border:0;background:none;color:var(--theme-ink);font:inherit;font-size:13px;text-decoration:underline;text-underline-offset:4px;cursor:pointer;white-space:nowrap}
+.channel-strip .certificate-setup:disabled{opacity:.45;cursor:wait}
+.channel-actions{display:flex;gap:26px;flex-wrap:wrap}
+@media(max-height:720px){.page-settings .page-actions{margin:6px 0}.page-settings .settings-top{margin:8px 0}.page-settings .path-field{margin:8px 0}.page-settings .path-field input{padding:6px 0}.page-settings .path-field>small{font-size:10px}.page-settings .page-primary{padding:8px 0;margin-top:8px}}

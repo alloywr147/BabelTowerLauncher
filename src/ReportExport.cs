@@ -19,7 +19,7 @@ namespace BabelManager {
         }
         public static string Build(Settings settings, InstallationResult install, Connectivity state, GameEvidence game) {
             var output = new StringBuilder();
-            output.AppendLine("巴别塔启动器 1.5 — 诊断报告");
+            output.AppendLine("巴别塔启动器 1.7 — 诊断报告");
             output.AppendLine("导出时间：" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
             output.AppendLine("系统：" + Environment.OSVersion.VersionString);
             output.AppendLine("启动器：" + SelfUpdater.VersionLabel(SelfUpdater.CurrentVersion));
@@ -27,13 +27,14 @@ namespace BabelManager {
             output.AppendLine();
             output.AppendLine("游戏目录有效：" + Core.IsGame(settings.GameRoot));
             output.AppendLine("完整包可用：" + Core.IsPackage(settings.CurrentFolder));
-            output.AppendLine("低延迟通道(https 面板 " + Bridge.HttpsPort + ")：" + (Bridge.CertificatePresent() ? "证书已生成" : "缺少证书，低延迟通道不可用(游戏将走位泵慢通道)"));
-            string settingsUrl = ""; try { settingsUrl = Bridge.SettingsUrl(settings.CurrentFolder); } catch { }
-            output.AppendLine("网页设置页(游戏内 /tr 打开)：" + (settingsUrl == "" ? "不可用" : settingsUrl));
             output.AppendLine("安装文件：" + (install != null && install.Ready ? "通过" : "未通过"));
             output.AppendLine("VPK 一致：" + (install != null && install.Vpk));
             output.AppendLine("addons 加载路径：" + (install != null && install.Mount));
             output.AppendLine("本地桥：" + (state.LocalFresh(DateTime.UtcNow) ? "正常" : "离线或检查已过期"));
+            var channel = state.Channel;
+            output.AppendLine("低延迟通道：" + (channel != null && channel.Fresh(DateTime.UtcNow) ? channel.Text : "尚未检查或检查已过期"));
+            if (channel != null && channel.Fresh(DateTime.UtcNow)) output.AppendLine("通道说明：" + channel.Message);
+            try { output.AppendLine("网页设置页：" + Bridge.SettingsUrl(settings.CurrentFolder)); } catch { output.AppendLine("网页设置页：不可用"); }
             output.AppendLine("在线翻译：" + (state.TranslationFresh(DateTime.UtcNow) ? "最近检查通过" : "未通过或需复检"));
             output.AppendLine("游戏运行：" + game.Running);
             output.AppendLine();
@@ -42,7 +43,7 @@ namespace BabelManager {
             output.AppendLine("游戏详情：" + Redact(game.Message, settings));
             output.AppendLine();
             output.AppendLine("报告不包含配置原文、API 密钥、聊天日志和完整本地路径。");
-            output.AppendLine("本地服务和在线测试通过不等于已确认游戏内连接，请在 /tr 面板测试。");
+            output.AppendLine("本地服务和在线测试通过不等于已确认游戏内连接，请用 /tr 打开网页设置页，并在游戏中确认。");
             return output.ToString();
         }
     }

@@ -1,14 +1,9 @@
-# GitHub 发布 1.6
+# GitHub 发布 1.7
 
-Code 上传源码文件；Release Assets 上传程序 ZIP。源码 ZIP 用于保存与分享，不能代替可运行程序包。
+1. 源码：桌面“巴别塔启动器1.7-GitHub上传”内提供完整源码与每批少于 100 个文件的网页上传目录。每次打开一批，把里面的文件和文件夹上传到仓库根目录；不要上传批次外层目录。
+2. 网页上传不会删除旧文件。参照旧文件清理清单移除已删除的简易模式文件，并把旧版本说明移到历史版本。
+3. Commit 标题：Release BabelTowerLauncher 1.7。
+4. 经过游戏内验证后，Release 标签填 v1.7、标题填“巴别塔启动器 1.7”，附件保持 BabelTowerLauncher-1.7-win64.zip，描述可复制 Release附件/发布说明.md。
+5. PR #1 尚未由本地操作合并。可保留该 PR，待验证完成后在 GitHub 合并，再上传/提交 1.7 补齐内容；保留原作者贡献记录。
 
-桌面“巴别塔启动器1.6-GitHub上传”包含完整源码及网页上传批次。打开每批文件夹，将里面的文件与目录拖入上传页，分别提交；不要上传批次外层目录。每批少于 100 个文件。
-
-提交标题：Release BabelTowerLauncher 1.6。
-
-发布标签：v1.6。
-发布标题：巴别塔启动器 1.6。
-程序附件：BabelTowerLauncher-1.6-win64.zip。
-
-不要上传个人 data、下载缓存、artifacts、dist、node_modules 或下载的 WebView2 SDK。
-网页覆盖不会自动删除远端旧文件，请按随附清理清单删除旧包中已移除的路径。
+Code 放源码；Release Assets 放程序 ZIP。源码 ZIP 供下载和备份，不替代仓库中的源码文件。

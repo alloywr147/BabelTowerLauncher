@@ -14,6 +14,35 @@ namespace BabelManager {
   public static void Write(string file,byte[] bytes){Core.NoLinks(file);string temporary=file+".bt-new-"+Guid.NewGuid().ToString("N");try{File.WriteAllBytes(temporary,bytes);File.Replace(temporary,file,null);}finally{if(File.Exists(temporary))File.Delete(temporary);}}
  }
  public static class PackageInstaller {
+  // Apply this preference once to the newly extracted package, before its bridge
+  // starts. Normal starts and repairs must preserve later in-game choices.
+  static void ConfigureNewPackage(string package) {
+   string config = Core.Child(package, "config/config.json");
+   string source = File.Exists(config) ? config : Core.Child(package, "config/config.example.json");
+   Core.NoLinks(source);
+   if (!File.Exists(source) || new FileInfo(source).Length > 1024 * 1024)
+    throw new Exception("新版配置缺失或体积异常，安装已取消。");
+   var values = Core.Json().Deserialize<Dictionary<string, object>>(File.ReadAllText(source));
+   if (values == null) throw new Exception("新版配置格式异常，安装已取消。");
+   object existing;
+   Dictionary<string, object> ui;
+   if (values.TryGetValue("ui", out existing)) {
+    ui = existing as Dictionary<string, object>;
+    if (ui == null) throw new Exception("新版 ui 配置格式异常，安装已取消。");
+   } else {
+    ui = new Dictionary<string, object>();
+    values["ui"] = ui;
+   }
+   ui["outgoing"] = "translation";
+   string temporary = config + ".bt-default-" + Guid.NewGuid().ToString("N");
+   try {
+    File.WriteAllText(temporary, Core.Json().Serialize(values), new UTF8Encoding(false));
+    if (File.Exists(config)) File.Replace(temporary, config, null);
+    else File.Move(temporary, config);
+   } finally {
+    if (File.Exists(temporary)) File.Delete(temporary);
+   }
+  }
   static void Cleanup(string root,string path){Core.NoLinks(path);if(!Core.Under(root,path))throw new Exception("临时目录超出安装目录。");if(Directory.Exists(path))Directory.Delete(path,true);}
   public static InstallReport Install(Settings settings,string archive,IBridgeRuntime runtime,Func<bool> gameRunning,Action<string> log,Action<bool,string> local){
    Core.ValidateSettings(settings);if(gameRunning())throw new Exception("请退出 Deadlock 后再安装；已下载的压缩包会保留。");
@@ -27,6 +56,8 @@ namespace BabelManager {
    try{
     log("解压并检查完整包："+Path.GetFileName(archive));Core.Extract(archive,stage);string pkg=Core.FindPackage(stage);string version=Core.VersionOf(archive,pkg);if(!Core.IsBabelVpk(Path.Combine(pkg,"pak01_dir.vpk")))throw new Exception("压缩包的 VPK 不包含巴别塔聊天资源。");
     fresh=Core.Child(settings.InstallRoot,"BabelTower-"+version);if(Directory.Exists(fresh))throw new Exception("目标版本目录已存在："+fresh+"。请先确认该目录的用途。");
+    ConfigureNewPackage(pkg);
+    log("新版默认设置：发送前翻译 → 仅译文。");
     if(gameRunning())throw new Exception("检测到游戏正在运行，请退出后重试。");Directory.Move(pkg,fresh);moved=true;
     if(!String.IsNullOrEmpty(old)){stoppedOld=runtime.HasOwned(old);if(stoppedOld)runtime.Stop(old);}
     report.Warning=Core.Commit(settings,fresh,()=>{

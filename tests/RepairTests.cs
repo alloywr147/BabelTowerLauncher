@@ -147,7 +147,7 @@ class RepairTests {
                 string before = File.ReadAllText(f.Gi);
                 var c = new Connectivity(); c.RecordCheck(new CheckResult { Error = "apiKey=do-not-export-this-secret; " + f.Settings.CurrentFolder }, DateTime.UtcNow);
                 string report = (string)t.GetMethod("Build").Invoke(null, new object[] { f.Settings, Installation.Inspect(f.Settings), c, new GameEvidence() });
-                Assert(report.Contains("巴别塔") && report.Contains("1.5"), "no identifying summary");
+                Assert(report.Contains("巴别塔") && report.Contains("1.7"), "no identifying summary");
                 Assert(!report.Contains("do-not-export-this-secret") && !report.Contains(f.Root), "secret/path leaked");
                 Assert(before == File.ReadAllText(f.Gi) && Directory.GetFiles(f.Addons).Length == 0, "report mutated files");
             }

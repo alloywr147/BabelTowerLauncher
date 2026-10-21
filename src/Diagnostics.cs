@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -24,7 +24,7 @@ namespace BabelManager {
   static List<Entry> Children(List<Entry> entries,string key){var e=entries.FirstOrDefault(x=>String.Equals(x.Key,key,StringComparison.OrdinalIgnoreCase));return e==null||e.Children==null?new List<Entry>():e.Children;}
   public static bool HasAddonsMount(string source){int i=0;var root=Parse(Tokens(source),ref i,false,0);var paths=Children(Children(Children(root,"GameInfo"),"FileSystem"),"SearchPaths");bool addons=false;foreach(var e in paths){if(e.Value==null||!e.Key.Split('+').Any(x=>x.Equals("Game",StringComparison.OrdinalIgnoreCase)))continue;string value=e.Value.Replace('\\','/').TrimEnd('/').ToLowerInvariant();if(value=="citadel"||value=="|gameinfo_path|."||value=="|gameinfo_path|")return addons;if(value=="citadel/addons"||value=="|gameinfo_path|addons")addons=true;}return addons;}
   static string Hash(string file){using(var f=new FileStream(file,FileMode.Open,FileAccess.Read,FileShare.Read))using(var hash=SHA256.Create())return Convert.ToBase64String(hash.ComputeHash(f));}
-  public static InstallationResult Inspect(Settings settings){var r=new InstallationResult();try{Core.ValidateSettings(settings);if(!Core.IsPackage(settings.CurrentFolder))throw new Exception("已有版本不完整，请重新导入完整 Windows 压缩包。");Core.NoLinks(settings.CurrentFolder);
+  public static InstallationResult Inspect(Settings settings){var r=new InstallationResult();try{Core.ValidateSettings(settings);if(!Core.IsPackage(settings.CurrentFolder))throw new Exception("已有版本不完整，请从更新页下载完整 Windows 包。");Core.NoLinks(settings.CurrentFolder);
     string packageVpk=Path.Combine(settings.CurrentFolder,"pak01_dir.vpk");if(!Core.IsBabelVpk(packageVpk))throw new Exception("当前包的 VPK 缺少巴别塔聊天资源。");string addons=Path.Combine(settings.GameRoot,"game","citadel","addons");
     var files=Directory.Exists(addons)?Directory.GetFiles(addons,"pak*_dir.vpk").Where(x=>Regex.IsMatch(Path.GetFileName(x),@"^pak\d+_dir\.vpk$",RegexOptions.IgnoreCase)&&Core.IsBabelVpk(x)).ToList():new List<string>();
     if(files.Count==0)r.Errors.Add("游戏 addons 中没有巴别塔 VPK，请退出游戏后重新安装。");else if(files.Count>1)r.Errors.Add("游戏里存在多个巴别塔 VPK，可能互相覆盖；请退出游戏后整理安装。");else{Core.NoLinks(files[0]);r.VpkFile=files[0];r.Vpk=Hash(packageVpk)==Hash(files[0]);if(!r.Vpk)r.Errors.Add("游戏里的巴别塔 VPK 与当前版本不同，请退出游戏后更新安装。");}
@@ -34,17 +34,20 @@ namespace BabelManager {
  }
  public class ProbeResult {public bool Local;public string Key="",Error="";}
  public class Connectivity {
+  public ChannelStatus Channel;
+  public Connectivity Snapshot(){return (Connectivity)MemberwiseClone();}
+  public bool ApplyChannel(ChannelStatus result,long revision,string context){if(revision!=Revision||context!=Context)return false;Channel=result;return true;}
   public string Context="",Key="",Error="",TranslationText="",TranslationError="";public bool Local,Known,Translation;public DateTime ProbeUtc,TranslationUtc;public long Revision;
-  public void ChangeContext(string context){if(context==Context)return;Context=context;Revision++;Key="";Local=Known=Translation=false;Error=TranslationText=TranslationError="";ProbeUtc=TranslationUtc=DateTime.MinValue;}
-  public long BeginAction(){return ++Revision;}
-  public bool ApplyProbe(ProbeResult p,long revision,DateTime now){if(revision!=Revision)return false;if(!p.Local||Key!=p.Key){Translation=false;TranslationUtc=DateTime.MinValue;TranslationText=TranslationError="";}Local=p.Local;Known=true;Key=p.Key;Error=p.Error;ProbeUtc=now;return true;}
+  public void ChangeContext(string context){if(context==Context)return;Context=context;Revision++;Channel=null;Key="";Local=Known=Translation=false;Error=TranslationText=TranslationError="";ProbeUtc=TranslationUtc=DateTime.MinValue;}
+  public long BeginAction(){Channel=null;return ++Revision;}
+  public bool ApplyProbe(ProbeResult p,long revision,DateTime now){if(revision!=Revision)return false;if(!p.Local||Key!=p.Key){Channel=null;Translation=false;TranslationUtc=DateTime.MinValue;TranslationText=TranslationError="";}Local=p.Local;Known=true;Key=p.Key;Error=p.Error;ProbeUtc=now;return true;}
   public void RecordCheck(CheckResult r,DateTime now){Revision++;ApplyProbe(new ProbeResult{Local=r.Local,Key=r.Key,Error=r.Error},Revision,now);Translation=r.Local&&r.Translation;TranslationUtc=Translation?now:DateTime.MinValue;TranslationText=r.Text;TranslationError=r.Local&&!r.Translation?r.Error:"";}
   public bool TranslationFresh(DateTime now){return Local&&Translation&&now>=TranslationUtc&&now-TranslationUtc<=TimeSpan.FromMinutes(10)&&now>=ProbeUtc&&now-ProbeUtc<=TimeSpan.FromSeconds(45);}
   public bool LocalFresh(DateTime now){return Known&&Local&&now>=ProbeUtc&&now-ProbeUtc<=TimeSpan.FromSeconds(45);}
  }
  public interface IBridgeRuntime {bool HasOwned(string folder);void Stop(string folder);void Start(string folder,Settings settings,Action<string> log);CheckResult Check(string folder,Action<string> log,Action<bool,string> local);}
  public sealed class BridgeRuntime:IBridgeRuntime {
-  public bool HasOwned(string folder){return Bridge.Processes(folder).Count>0;}public void Stop(string folder){Bridge.Stop(folder);}public void Start(string folder,Settings s,Action<string> log){Bridge.Start(folder,s,log);}public CheckResult Check(string folder,Action<string> log,Action<bool,string> local){return Bridge.Check(folder,log,local);}
+  public bool HasOwned(string folder){return Bridge.Processes(folder).Count>0||Bridge.HttpsProcesses(folder).Count>0;}public void Stop(string folder){Bridge.Stop(folder);}public void Start(string folder,Settings s,Action<string> log){Bridge.Start(folder,s,log);}public CheckResult Check(string folder,Action<string> log,Action<bool,string> local){return Bridge.Check(folder,log,local);}
  }
  public static class Recovery {
   public static CheckResult Run(Settings settings,bool restart,Action<string> log,Action<bool,string> local,IBridgeRuntime runtime){Core.ValidateSettings(settings);if(!Core.IsPackage(settings.CurrentFolder))throw new Exception("已有版本不完整，无法恢复桥。");Core.NoLinks(settings.CurrentFolder);if(!Core.Under(settings.InstallRoot,settings.CurrentFolder))throw new Exception("所选版本不在安装目录内。");if(restart&&runtime.HasOwned(settings.CurrentFolder)){log("仅重启所选版本的桥，游戏继续运行。");runtime.Stop(settings.CurrentFolder);}runtime.Start(settings.CurrentFolder,settings,log);return runtime.Check(settings.CurrentFolder,log,local);}

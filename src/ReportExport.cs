@@ -27,6 +27,9 @@ namespace BabelManager {
             output.AppendLine();
             output.AppendLine("游戏目录有效：" + Core.IsGame(settings.GameRoot));
             output.AppendLine("完整包可用：" + Core.IsPackage(settings.CurrentFolder));
+            output.AppendLine("低延迟通道(https 面板 " + Bridge.HttpsPort + ")：" + (Bridge.CertificatePresent() ? "证书已生成" : "缺少证书，低延迟通道不可用(游戏将走位泵慢通道)"));
+            string settingsUrl = ""; try { settingsUrl = Bridge.SettingsUrl(settings.CurrentFolder); } catch { }
+            output.AppendLine("网页设置页(游戏内 /tr 打开)：" + (settingsUrl == "" ? "不可用" : settingsUrl));
             output.AppendLine("安装文件：" + (install != null && install.Ready ? "通过" : "未通过"));
             output.AppendLine("VPK 一致：" + (install != null && install.Vpk));
             output.AppendLine("addons 加载路径：" + (install != null && install.Mount));

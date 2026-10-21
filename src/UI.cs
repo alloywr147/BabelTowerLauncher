@@ -52,6 +52,7 @@ namespace BabelManager {
    diagnosticButton=ButtonAt("诊断",10,168,80,48,false,ShowDiagnostics);rail.Controls.Add(diagnosticButton);
    settingsButton=ButtonAt("设置",10,242,80,48,false,ShowSetup);rail.Controls.Add(settingsButton);
    rail.Controls.Add(ButtonAt("软件更新",10,316,80,48,false,ShowSoftwareUpdate));
+   rail.Controls.Add(ButtonAt("网页设置",10,390,80,48,false,()=>{try{Bridge.OpenSettingsPage(settings.CurrentFolder);}catch(Exception e){Error(e.Message);}}));
    rail.Controls.Add(ButtonAt("文件夹",10,584,80,48,false,()=>OpenFolder(settings.InstallRoot)));body.Controls.Add(rail);
    var name=LabelAt("DEADLOCK",150,23,818,70,44,Theme.Text,true);name.Font=new Font("Bahnschrift",44,FontStyle.Bold);body.Controls.Add(name);
    version=LabelAt("当前版本 / "+(String.IsNullOrEmpty(settings.CurrentFolder)?"尚未安装":Path.GetFileName(settings.CurrentFolder)),154,101,810,29,11,Theme.Text);body.Controls.Add(version);

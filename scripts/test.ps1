@@ -26,7 +26,8 @@ $taskJobs=@(
  @{Name='OnlineUpdate';Main='OnlineUpdateTests';Files=@('OnlineUpdateTests.cs');Args=@()},
  @{Name='PackageUpdate';Main='PackageUpdateTests';Files=@('PackageUpdateTests.cs');Args=@()},
  @{Name='SelfUpdate';Main='SelfUpdateTests';Files=@('SelfUpdateTests.cs');Args=@((Join-Path $taskOut 'launcher-fixture.exe'),(Join-Path $taskOut 'BabelTowerUpdater.exe'))},
- @{Name='StartupUpdate';Main='StartupUpdateTests';Files=@('StartupUpdateTests.cs');Args=@()}
+ @{Name='StartupUpdate';Main='StartupUpdateTests';Files=@('StartupUpdateTests.cs');Args=@()},
+ @{Name='BridgeHttps';Main='BridgeHttpsTests';Files=@('BridgeHttpsTests.cs');Args=@()}
 )
 $taskPreviousTemp=$env:TEMP
 $taskPreviousTmp=$env:TMP
